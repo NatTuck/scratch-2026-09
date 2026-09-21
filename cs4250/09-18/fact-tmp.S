@@ -16,20 +16,32 @@
  *   return x * fact(x-1)
  *
  * Variable (and temp) mappings:
- *  - x is 0(sp)
+ *  - x is t4
  *  - result goes in a0
  *  - x-1 goes in a0
  */
 
+// Only call this on positive integers.
+// If you call on 0, you'll get 0, and we told you.
 fact:
     addi sp, sp, -16
     sd ra, 8(sp)
    
     # Move x to where it lives
-    sd a0, 0(sp)
+    mv t4, a0
 
-    # TODO: Finish this
+    li t0, 1
+    ble a0, t0, fact_done
+else_branch:
 
+    addi a0, a0, -1
+    sd t4, 0(sp)
+    call fact
+    ld t4, 0(sp)
+
+    mul a0, a0, t4
+
+fact_done:
     ld ra, 8(sp)
     addi sp, sp, 16
     ret
@@ -46,7 +58,15 @@ main:
     # Body
     li a0, 5
 
-    call fact
+    call fact   // pseudoinstruction
+                // we really have "jalr"
+                // jalr reg, immediate
+                //
+                // two variants:
+                // if distance to fact < max immediate value
+                // jalr sa, (ip - fact)
+                //
+                // if too far away, two instructions
     
     mv a1, a0
     la a0, long_fmt
@@ -63,6 +83,6 @@ main:
 
 .section .data
 
-long_fmt: .string "y + 2 = %ld\n"
+long_fmt: .string "fact(y) = %ld\n"
 
 
